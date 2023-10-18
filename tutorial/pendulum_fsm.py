@@ -15,15 +15,32 @@ button_right = False
 lastx = 0
 lasty = 0
 
+FSM_SWINGUP = 0
+FSM_HOLD = 1
+
 
 def init_controller(model, data):
     # initialize the controller here. This function is called once, in the beginning
-    pass
+    global FSM
+    FSM = FSM_SWINGUP
 
 
 def controller(model, data):
     # put the controller here. This function is called inside the simulation.
     # pass
+    global FSM
+    if data.qpos[0] >= 2.5 and FSM == FSM_SWINGUP:
+        FSM = FSM_HOLD
+
+    if FSM == FSM_SWINGUP:
+        set_velocity_servo(2, 100)
+        data.ctrl[2] = 0.5
+
+    if FSM == FSM_HOLD:
+        set_position_servo(1, 100)
+        set_velocity_servo(2, 10)
+        data.ctrl[1] = np.pi
+
     # spring-like position servo
     # set_position_servo(1, 10)
     # data.ctrl[1] = np.pi # position
@@ -38,10 +55,10 @@ def controller(model, data):
     # data.ctrl[1] = np.pi # position
 
     # torque control
-    set_torque_servo(0, 1)
+    # set_torque_servo(0, 1)
     # data.ctrl[0] = -100 * (data.qpos[0] - np.pi)  # torque (spring)
     # data.ctrl[0] = -100 * (data.qvel[0] - 0.5)  # speed control
-    data.ctrl[0] = -100 * (data.qpos[0] - np.pi) - 10 * data.qvel[0]  # position control
+    # data.ctrl[0] = -100 * (data.qpos[0] - np.pi) - 10 * data.qvel[0]  # position control
 
 
 def set_torque_servo(actuator_no, flag):
@@ -169,7 +186,7 @@ cam.elevation = -2.8073894766455036
 cam.distance = 5.457557373462702
 cam.lookat = np.array([0.0, 0.0, 3.0])
 
-data.qpos[0] = np.pi / 2
+data.qpos[0] = 0
 
 # initialize the controller
 init_controller(model, data)
